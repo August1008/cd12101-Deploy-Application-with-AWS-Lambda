@@ -7,6 +7,10 @@ export async function handler(event) {
   const result = await todosService.updateTodo(todoId, updatedTodo);
   return {
     statusCode: 201,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
+    },
     body: JSON.stringify(result)
   };
 }

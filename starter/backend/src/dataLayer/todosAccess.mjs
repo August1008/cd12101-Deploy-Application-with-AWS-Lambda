@@ -2,7 +2,9 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { v4 as uuidv4 } from 'uuid'
 import 'dotenv/config';
+import { createLogger } from '../utils/logger.mjs';
 
+const logger = createLogger('database')
 
 const dynamoDB = new DynamoDB({
     region: 'us-east-1',
@@ -21,26 +23,35 @@ const CreatedAtIndex = process.env.CreatedAtIndex;
 
 const todosAccess = (function todosAccess() {
     return {
-        async getTodos() {
-            const result = await dynamodbClient.scan(
+        async getTodos(userId) {
+            const result = await dynamodbClient.query(
                 {
                     TableName: todosTable,
+                    KeyConditionExpression: "userId = :userId",
+                    ExpressionAttributeValues: {
+                        ':userId': userId
+                    }
                 }
             )
+            logger.info(`query result: ${JSON.stringify(result)}`);
             const items = result.Items;
             return items;
         },
-        async createTodo(item) {
+        async createTodo(userId, item) {
             const itemId = uuidv4();
+            const createdAt = new Date().toString();
             const newItem = {
                 todoId: itemId,
+                userId: userId,
+                createdAt: createdAt,
+                done: false,
                 ...item
             };
             const result = await dynamodbClient.put({
                 TableName: todosTable,
                 Item: newItem
             });
-            console.log(result);
+            logger.info(`query result: ${JSON.stringify(result)}`);
             return newItem;
         },
         async deleteTodo(todoId) {
@@ -60,6 +71,7 @@ const todosAccess = (function todosAccess() {
                         userId: todos.Items[0].userId
                     }
                 });
+                logger.info(`query result: ${JSON.stringify(result)}`);
                 return todoId;
             }
             else return null;
@@ -80,6 +92,7 @@ const todosAccess = (function todosAccess() {
                     TableName: todosTable,
                     Item: updatedItem
                 });
+                logger.info(`query result: ${JSON.stringify(result)}`);
                 return updatedItem;
             }
             return null;

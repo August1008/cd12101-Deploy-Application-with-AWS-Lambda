@@ -2,11 +2,11 @@ import { todosAccess } from "../dataLayer/todosAccess.mjs";
 
 const todosService = (function todosService(){
     return {
-        async getTodos() {
-            return todosAccess.getTodos();
+        async getTodos(userId) {
+            return todosAccess.getTodos(userId);
         },
-        async createTodo(item) {
-            return todosAccess.createTodo(item);
+        async createTodo(userId, item) {
+            return todosAccess.createTodo(userId, item);
         },
         async deleteTodo(todoId) {
             return todosAccess.deleteTodo(todoId);

@@ -5,7 +5,11 @@ export async function handler(event) {
 
   const result = await todosService.deleteTodo(todoId);
   return {
-    statusCode: 204
+    statusCode: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
+    }
   };
 }
 

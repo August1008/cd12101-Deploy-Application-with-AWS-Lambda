@@ -29,7 +29,7 @@ mnlrDsYWiial15Q+pWxTjY3ujc0XsUSbT/SbnUDhcMXq
 export async function handler(event) {
   try {
     const jwtToken = await verifyToken(event.authorizationToken)
-
+    logger.info('User was authorized');
     return {
       principalId: jwtToken.sub,
       policyDocument: {

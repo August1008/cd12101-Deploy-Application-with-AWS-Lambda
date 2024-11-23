@@ -19,6 +19,7 @@ provider:
     TODOS_TODOID_INDEX: TodoIdIndex
     AWS_ACCESS_KEY_TEST: '${env:AWS_ACCESS_KEY}'
     AWS_SECRET_ACCESS_KEY_TEST: '${env:AWS_SECRET_ACCESS_KEY}'
+    S3_BUCKET: 'udacity-annb16-cloud-developer-final-project'
 
 
 functions:
@@ -100,6 +101,42 @@ functions:
 
 resources:
   Resources:
+    UdacityBucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: udacity-annb16-cloud-developer-final-project
+        #AccessControl: PublicReadWrite
+        OwnershipControls:  # << Add
+          Rules:
+            - ObjectOwnership: ObjectWriter
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+        CorsConfiguration:
+          CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - HEAD
+            AllowedOrigins:
+              - '*'
+    UdacityBucketPolicy:
+      Type: 'AWS::S3::BucketPolicy'
+      Properties:
+        Bucket: !Ref UdacityBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Action:
+                - 's3:GetObject'
+                - 's3:PutObject'
+              Effect: Allow
+              Resource:
+                - !Sub 'arn:aws:s3:::${UdacityBucket}'
+                - !Sub 'arn:aws:s3:::${UdacityBucket}/*'
+              Principal: '*'
     TodosTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
