@@ -1,8 +1,11 @@
+import { todosService } from "../../businessLogic/todosService.mjs";
 
-export function handler(event) {
+export async function handler(event) {
   const todoId = event.pathParameters.todoId
 
-  // TODO: Remove a TODO item by id
-  return undefined
+  const result = await todosService.deleteTodo(todoId);
+  return {
+    statusCode: 204
+  };
 }
 

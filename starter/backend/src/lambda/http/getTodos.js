@@ -1,4 +1,9 @@
-export function handler(event) {
-  // TODO: Get all TODO items for a current user
-  return undefined
+import { todosService } from "../../businessLogic/todosService.mjs";
+
+export async function handler(event) {
+  const items = await todosService.getTodos();
+  return {
+    statusCode: 200,
+    body: JSON.stringify({items})
+  };
 }
