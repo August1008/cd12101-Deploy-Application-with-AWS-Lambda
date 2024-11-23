@@ -1,13 +1,25 @@
 service: serverless-todo-app
-
+useDotenv: true
 plugins:
   - serverless-iam-roles-per-function
+  - serverless-offline
 
 frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs18.x
+  timeout: 300
+  profile: annb16
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    TODOS_TABLE: Todos-${self:provider.stage}
+    TODOS_CREATED_AT_INDEX: CreatedAtIndex
+    TODOS_TODOID_INDEX: TodoIdIndex
+    AWS_ACCESS_KEY_TEST: '${env:AWS_ACCESS_KEY}'
+    AWS_SECRET_ACCESS_KEY_TEST: '${env:AWS_SECRET_ACCESS_KEY}'
+
 
 functions:
 
@@ -20,7 +32,14 @@ functions:
     events:
       - http:
           method: get
+          authorizer: Auth
           path: todos
+          cors: true
+    iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+      Resource: arn:aws:dynamodb:${self:provider.region}:880825034145:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function
   CreateTodo:
@@ -28,7 +47,14 @@ functions:
     events:
       - http:
           method: post
+          authorizer: Auth
           path: todos
+          cors: true
+    iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:880825034145:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function
   UpdateTodo:
@@ -37,6 +63,14 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          authorizer: Auth
+          cors: true
+    iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:880825034145:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function
   DeleteTodo:
@@ -45,6 +79,14 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          authorizer: Auth
+          cors: true
+    iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:880825034145:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -53,7 +95,41 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          authorizer: Auth
+          cors: true
 
 resources:
   Resources:
-    # TODO: Add any necessary AWS resources
+    TodosTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: todoId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: todoId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
+        GlobalSecondaryIndexes:
+        - IndexName: ${self:provider.environment.TODOS_TODOID_INDEX}
+          KeySchema:
+          - AttributeName: todoId
+            KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        LocalSecondaryIndexes:
+        - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL # What attributes will be copied to an index
