@@ -3,6 +3,8 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { v4 as uuidv4 } from 'uuid'
 import 'dotenv/config';
 import { createLogger } from '../utils/logger.mjs';
+import AWSXRay from 'aws-xray-sdk-core';
+
 
 const logger = createLogger('database')
 
@@ -14,8 +16,10 @@ const dynamoDB = new DynamoDB({
     }
 });
 
+const dynamoDbXRay = AWSXRay.captureAWSv3Client(dynamoDB)
 
-const dynamodbClient = DynamoDBDocument.from(dynamoDB);
+
+const dynamodbClient = DynamoDBDocument.from(dynamoDbXRay);
 
 const todosTable = process.env.TODOS_TABLE;
 const TodoIdIndex = process.env.TODOS_TODOID_INDEX

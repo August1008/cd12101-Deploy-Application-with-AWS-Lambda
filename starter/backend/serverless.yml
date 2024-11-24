@@ -2,6 +2,7 @@ service: serverless-todo-app
 useDotenv: true
 plugins:
   - serverless-iam-roles-per-function
+  - serverless-plugin-tracing
   - serverless-offline
 
 frameworkVersion: '3'
@@ -12,6 +13,16 @@ provider:
   timeout: 300
   profile: annb16
   stage: ${opt:stage, 'dev'}
+  tracing: 
+    lambda: true
+    apiGateway: true
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
   region: ${opt:region, 'us-east-1'}
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
